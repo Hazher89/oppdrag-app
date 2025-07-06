@@ -13,36 +13,45 @@ class APIService: ObservableObject {
     
     // Replace with your actual API base URL
     
-    private let baseURL = "http://localhost:3000/api/v1"
+    private let baseURL = "https://oppdrag-app.onrender.com/api/v1"
     private var authToken: String?
     
-    private init() {}
+    public init() {
+        setupJSONDecoder()
+    }
+    
+    private func setupJSONDecoder() {
+        let decoder = JSONDecoder()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        decoder.dateDecodingStrategy = .formatted(dateFormatter)
+    }
     
     // MARK: - Authentication
-    func signIn(phoneNumber: String, password: String) async throws -> AuthResponse {
+    func signIn(email: String, password: String) async throws -> AuthResponse {
         let endpoint = "/auth/signin"
-        let body = SignInRequest(phoneNumber: phoneNumber, password: password)
+        let body = SignInRequest(email: email, password: password)
         
         return try await performRequest(endpoint: endpoint, method: "POST", body: body)
     }
     
-    func signUp(phoneNumber: String, name: String, password: String) async throws -> AuthResponse {
+    func signUp(email: String, name: String, password: String) async throws -> AuthResponse {
         let endpoint = "/auth/signup"
-        let body = SignUpRequest(phoneNumber: phoneNumber, name: name, password: password)
+        let body = SignUpRequest(email: email, name: name, password: password)
         
         return try await performRequest(endpoint: endpoint, method: "POST", body: body)
     }
     
-    func forgotPassword(phoneNumber: String) async throws -> ForgotPasswordResponse {
+    func forgotPassword(email: String) async throws -> ForgotPasswordResponse {
         let endpoint = "/auth/forgot-password"
-        let body = ForgotPasswordRequest(phoneNumber: phoneNumber)
+        let body = ForgotPasswordRequest(email: email)
         
         return try await performRequest(endpoint: endpoint, method: "POST", body: body)
     }
     
-    func resetPassword(phoneNumber: String, resetCode: String, newPassword: String) async throws -> MessageResponse {
+    func resetPassword(email: String, resetCode: String, newPassword: String) async throws -> MessageResponse {
         let endpoint = "/auth/reset-password"
-        let body = ResetPasswordRequest(phoneNumber: phoneNumber, resetCode: resetCode, newPassword: newPassword)
+        let body = ResetPasswordRequest(email: email, resetCode: resetCode, newPassword: newPassword)
         
         return try await performRequest(endpoint: endpoint, method: "POST", body: body)
     }
@@ -137,7 +146,11 @@ class APIService: ObservableObject {
         
         switch httpResponse.statusCode {
         case 200...299:
-            return try JSONDecoder().decode(T.self, from: data)
+            let decoder = JSONDecoder()
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            decoder.dateDecodingStrategy = .formatted(dateFormatter)
+            return try decoder.decode(T.self, from: data)
         case 401:
             throw APIError.unauthorized
         case 404:
@@ -149,7 +162,8 @@ class APIService: ObservableObject {
         }
     }
     
-    private func performRequest<T: Codable, U: Codable>(endpoint: String, method: String, body: U) async throws -> T {
+    // Generic request method that can handle different body types
+    func performRequest<T: Codable, U>(endpoint: String, method: String, body: U) async throws -> T {
         guard let url = URL(string: baseURL + endpoint) else {
             throw APIError.invalidURL
         }
@@ -162,7 +176,14 @@ class APIService: ObservableObject {
             request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
         }
         
-        request.httpBody = try JSONEncoder().encode(body)
+        // Handle different body types
+        if let codableBody = body as? Codable {
+            request.httpBody = try JSONEncoder().encode(codableBody)
+        } else if let dictionaryBody = body as? [String: Any] {
+            request.httpBody = try JSONSerialization.data(withJSONObject: dictionaryBody)
+        } else {
+            throw APIError.invalidURL
+        }
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -172,7 +193,11 @@ class APIService: ObservableObject {
         
         switch httpResponse.statusCode {
         case 200...299:
-            return try JSONDecoder().decode(T.self, from: data)
+            let decoder = JSONDecoder()
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            decoder.dateDecodingStrategy = .formatted(dateFormatter)
+            return try decoder.decode(T.self, from: data)
         case 401:
             throw APIError.unauthorized
         case 404:
@@ -196,12 +221,12 @@ class APIService: ObservableObject {
 
 // MARK: - Request Models
 struct SignInRequest: Codable {
-    let phoneNumber: String
+    let email: String
     let password: String
 }
 
 struct SignUpRequest: Codable {
-    let phoneNumber: String
+    let email: String
     let name: String
     let password: String
 }
@@ -219,11 +244,11 @@ struct MessageRequest: Codable {
 }
 
 struct ForgotPasswordRequest: Codable {
-    let phoneNumber: String
+    let email: String
 }
 
 struct ResetPasswordRequest: Codable {
-    let phoneNumber: String
+    let email: String
     let resetCode: String
     let newPassword: String
 }

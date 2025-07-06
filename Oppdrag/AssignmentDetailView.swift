@@ -202,13 +202,15 @@ struct AssignmentDetailView: View {
     
     private func markInProgress() {
         Task {
-            await assignmentsManager.updateArrivalTime(for: assignment.id, time: Date())
+            await assignmentsManager.updateAssignmentStatus(assignmentId: assignment.id, status: .inProgress)
+            dismiss()
         }
     }
     
     private func markComplete() {
         Task {
             await assignmentsManager.markAssignmentComplete(assignmentId: assignment.id)
+            dismiss()
         }
     }
 }
@@ -260,14 +262,13 @@ struct ArrivalTimePickerView: View {
     }
 }
 
-
-
 #Preview {
     AssignmentDetailView(assignment: Assignment(
         id: "1",
         title: "Morning Route - Downtown",
         description: "Deliver packages to downtown area. Start at warehouse and follow route map.",
         date: Date().addingTimeInterval(86400),
+        
         status: .pending,
         pdfUrl: "https://example.com/assignment1.pdf",
         arrivalTime: nil

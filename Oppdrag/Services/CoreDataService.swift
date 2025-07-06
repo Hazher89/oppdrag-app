@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import SwiftUI
 
 class CoreDataService: ObservableObject {
     static let shared = CoreDataService()
@@ -220,6 +221,9 @@ class CoreDataService: ObservableObject {
     
     // MARK: - User Operations
     func saveUser(_ user: User) {
+        let context = persistentContainer.viewContext
+        
+        // Check if user already exists
         let fetchRequest: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", user.id)
         
@@ -227,49 +231,46 @@ class CoreDataService: ObservableObject {
             let existingUsers = try context.fetch(fetchRequest)
             let userEntity: UserEntity
             
-            if let existing = existingUsers.first {
-                userEntity = existing
+            if let existingUser = existingUsers.first {
+                userEntity = existingUser
             } else {
                 userEntity = UserEntity(context: context)
                 userEntity.id = user.id
             }
             
-            userEntity.phoneNumber = user.phoneNumber
+            // Update user data
+            userEntity.email = user.email
             userEntity.name = user.name
             userEntity.role = user.role.rawValue
             userEntity.companyId = user.companyId
+            userEntity.isEmailVerified = user.isEmailVerified ?? false
             
-            save()
+            try context.save()
+            print("✅ User saved to Core Data: \(user.name)")
         } catch {
-            print("Error saving user: \(error)")
+            print("❌ Error saving user to Core Data: \(error)")
         }
     }
     
     func fetchUser(id: String) -> User? {
+        let context = persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<UserEntity> = UserEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %@", id)
         
         do {
-            let entities = try context.fetch(fetchRequest)
-            guard let entity = entities.first,
-                  let id = entity.id,
-                  let phoneNumber = entity.phoneNumber,
-                  let name = entity.name,
-                  let roleString = entity.role,
-                  let role = UserRole(rawValue: roleString),
-                  let companyId = entity.companyId else {
-                return nil
-            }
+            let users = try context.fetch(fetchRequest)
+            guard let entity = users.first else { return nil }
             
             return User(
-                id: id,
-                phoneNumber: phoneNumber,
-                name: name,
-                role: role,
-                companyId: companyId
+                id: entity.id ?? "",
+                email: entity.email ?? "",
+                name: entity.name ?? "",
+                role: UserRole(rawValue: entity.role ?? "driver") ?? .driver,
+                companyId: entity.companyId ?? "",
+                isEmailVerified: entity.isEmailVerified
             )
         } catch {
-            print("Error fetching user: \(error)")
+            print("❌ Error fetching user from Core Data: \(error)")
             return nil
         }
     }

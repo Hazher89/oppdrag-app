@@ -7,15 +7,15 @@ class PasswordRecoveryViewModel: ObservableObject {
     @Published var showSuccess = false
     @Published var errorMessage = ""
     
-    private let apiService = APIService.shared
+    private let apiService = APIService()
     
-    func requestResetCode(phoneNumber: String) async {
+    func requestResetCode(email: String) async {
         isLoading = true
         showError = false
         
         do {
-            let response = try await apiService.forgotPassword(phoneNumber: phoneNumber)
-            print("Reset code sent: \(response.resetCode)") // For testing - remove in production
+            _ = try await apiService.forgotPassword(email: email)
+            // print("Reset code sent: \(response.resetCode)") // For testing - remove in production
             showSuccess = true
         } catch {
             errorMessage = error.localizedDescription
@@ -25,13 +25,13 @@ class PasswordRecoveryViewModel: ObservableObject {
         isLoading = false
     }
     
-    func resetPassword(phoneNumber: String, resetCode: String, newPassword: String) async {
+    func resetPassword(email: String, resetCode: String, newPassword: String) async {
         isLoading = true
         showError = false
         
         do {
-            let response = try await apiService.resetPassword(
-                phoneNumber: phoneNumber,
+            _ = try await apiService.resetPassword(
+                email: email,
                 resetCode: resetCode,
                 newPassword: newPassword
             )

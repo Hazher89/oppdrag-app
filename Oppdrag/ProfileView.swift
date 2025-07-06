@@ -10,6 +10,8 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var authManager: AuthenticationManager
     @State private var showingSettings = false
+    @State private var showingHelpSupport = false
+    @State private var showingAbout = false
     
     var body: some View {
         NavigationView {
@@ -86,7 +88,7 @@ struct ProfileView: View {
                         MenuRowView(
                             title: "Help & Support",
                             icon: "questionmark.circle",
-                            action: { }
+                            action: { showingHelpSupport = true }
                         )
                         
                         Divider()
@@ -95,7 +97,7 @@ struct ProfileView: View {
                         MenuRowView(
                             title: "About DriveDispatch",
                             icon: "info.circle",
-                            action: { }
+                            action: { showingAbout = true }
                         )
                     }
                     .background(Color(.systemBackground))
@@ -128,6 +130,12 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.large)
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
+            }
+            .sheet(isPresented: $showingHelpSupport) {
+                HelpSupportView()
+            }
+            .sheet(isPresented: $showingAbout) {
+                AboutView()
             }
         }
     }
@@ -234,4 +242,306 @@ struct SettingsView: View {
 #Preview {
     ProfileView()
         .environmentObject(AuthenticationManager())
+}
+
+struct HelpSupportView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 16) {
+                        Image(systemName: "questionmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.blue)
+                        
+                        Text("Help & Support")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        
+                        Text("Get help with using DriveDispatch")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 20)
+                    
+                    // FAQ Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Frequently Asked Questions")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        VStack(spacing: 12) {
+                            FAQItem(
+                                question: "How do I start an assignment?",
+                                answer: "Tap on an assignment in the Assignments tab, then tap 'Start Assignment' to begin."
+                            )
+                            
+                            FAQItem(
+                                question: "How do I set arrival time?",
+                                answer: "In assignment details, tap 'Set Arrival Time' and choose your expected arrival time."
+                            )
+                            
+                            FAQItem(
+                                question: "How do I mark an assignment complete?",
+                                answer: "When you're in progress, tap 'Mark Complete' in the assignment details."
+                            )
+                            
+                            FAQItem(
+                                question: "How do I view assignment PDFs?",
+                                answer: "Tap 'View Assignment PDF' in the assignment details to open the document."
+                            )
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // Contact Support
+                    VStack(spacing: 16) {
+                        Text("Contact Support")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        VStack(spacing: 12) {
+                            ContactItem(
+                                title: "Emergency Support",
+                                subtitle: "24/7 urgent assistance",
+                                icon: "phone.fill",
+                                color: .red
+                            )
+                            
+                            ContactItem(
+                                title: "Technical Support",
+                                subtitle: "App and system issues",
+                                icon: "wrench.fill",
+                                color: .blue
+                            )
+                            
+                            ContactItem(
+                                title: "Dispatch Office",
+                                subtitle: "Assignment and route questions",
+                                icon: "message.fill",
+                                color: .green
+                            )
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    Spacer(minLength: 20)
+                }
+            }
+            .navigationTitle("Help & Support")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct AboutView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header
+                    VStack(spacing: 16) {
+                        Image(systemName: "car.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.blue)
+                        
+                        Text("DriveDispatch")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        
+                        Text("Version 1.0.0")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 20)
+                    
+                    // App Description
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("About DriveDispatch")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        Text("DriveDispatch is a comprehensive driver assignment management system designed to streamline delivery operations. Our app helps drivers efficiently manage their routes, communicate with dispatch, and track their progress.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Features
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Key Features")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        VStack(spacing: 12) {
+                            FeatureItem(
+                                title: "Assignment Management",
+                                description: "View and manage your delivery assignments",
+                                icon: "doc.text.fill"
+                            )
+                            
+                            FeatureItem(
+                                title: "Real-time Chat",
+                                description: "Communicate with dispatch and team members",
+                                icon: "message.fill"
+                            )
+                            
+                            FeatureItem(
+                                title: "PDF Document Viewing",
+                                description: "Access assignment details and route maps",
+                                icon: "doc.fill"
+                            )
+                            
+                            FeatureItem(
+                                title: "Arrival Time Tracking",
+                                description: "Set and track your arrival times",
+                                icon: "clock.fill"
+                            )
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // Company Info
+                    VStack(spacing: 12) {
+                        Text("© 2025 DriveDispatch")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Text("All rights reserved")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 20)
+                    
+                    Spacer(minLength: 20)
+                }
+            }
+            .navigationTitle("About")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct FAQItem: View {
+    @State private var isExpanded = false
+    let question: String
+    let answer: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isExpanded.toggle()
+                }
+            }) {
+                HStack {
+                    Text(question)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            if isExpanded {
+                Text(answer)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct ContactItem: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(color)
+                .frame(width: 24)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct FeatureItem: View {
+    let title: String
+    let description: String
+    let icon: String
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.blue)
+                .frame(width: 24)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
 } 

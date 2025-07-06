@@ -3,15 +3,15 @@ import SwiftUI
 struct PasswordRecoveryView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = PasswordRecoveryViewModel()
-    @State private var phoneNumber = ""
+    @State private var email = ""
     @State private var resetCode = ""
     @State private var newPassword = ""
     @State private var confirmPassword = ""
-    @State private var currentStep: RecoveryStep = .phoneNumber
+    @State private var currentStep: RecoveryStep = .requestCode
     
     enum RecoveryStep {
-        case phoneNumber
-        case verificationCode
+        case requestCode
+        case enterCode
         case newPassword
     }
     
@@ -19,47 +19,38 @@ struct PasswordRecoveryView: View {
         NavigationView {
             VStack(spacing: 30) {
                 // Header
-                VStack(spacing: 10) {
+                VStack(spacing: 16) {
                     Image(systemName: "lock.rotation")
-                        .font(.system(size: 60))
+                        .font(.system(size: 50))
                         .foregroundColor(.blue)
                     
                     Text("Password Recovery")
-                        .font(.largeTitle)
+                        .font(.title)
                         .fontWeight(.bold)
                     
-                    Text("Reset your password using your phone number")
+                    Text(getStepDescription())
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                 }
-                .padding(.top, 50)
                 
-                // Progress indicator
-                HStack(spacing: 20) {
-                    ForEach(0..<3) { index in
-                        Circle()
-                            .fill(getStepColor(for: index))
-                            .frame(width: 12, height: 12)
+                // Form
+                VStack(spacing: 20) {
+                    switch currentStep {
+                    case .requestCode:
+                        requestCodeView
+                    case .enterCode:
+                        enterCodeView
+                    case .newPassword:
+                        newPasswordView
                     }
-                }
-                .padding(.horizontal)
-                
-                // Content based on current step
-                switch currentStep {
-                case .phoneNumber:
-                    phoneNumberStep
-                case .verificationCode:
-                    verificationCodeStep
-                case .newPassword:
-                    newPasswordStep
                 }
                 
                 Spacer()
             }
             .padding()
+            .navigationTitle("Password Recovery")
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -67,40 +58,19 @@ struct PasswordRecoveryView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $viewModel.showError) {
-                Button("OK") { }
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            .alert("Success", isPresented: $viewModel.showSuccess) {
-                Button("OK") {
-                    dismiss()
-                }
-            } message: {
-                Text("Your password has been reset successfully!")
-            }
         }
     }
     
-    private var phoneNumberStep: some View {
-        VStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Phone Number")
-                    .font(.headline)
-                
-                TextField("Enter your phone number", text: $phoneNumber)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .keyboardType(.phonePad)
-            }
+    private var requestCodeView: some View {
+        VStack(spacing: 16) {
+            CustomTextField(
+                text: $email,
+                placeholder: "Enter your email address",
+                icon: "envelope",
+                keyboardType: .emailAddress
+            )
             
-            Button(action: {
-                Task {
-                    await viewModel.requestResetCode(phoneNumber: phoneNumber)
-                    if !viewModel.showError {
-                        currentStep = .verificationCode
-                    }
-                }
-            }) {
+            Button(action: requestResetCode) {
                 HStack {
                     if viewModel.isLoading {
                         ProgressView()
@@ -112,134 +82,134 @@ struct PasswordRecoveryView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.blue)
+                .background(!email.isEmpty ? Color.blue : Color.gray)
                 .foregroundColor(.white)
-                .cornerRadius(10)
+                .cornerRadius(12)
             }
-            .disabled(phoneNumber.isEmpty || viewModel.isLoading)
+            .disabled(email.isEmpty || viewModel.isLoading)
         }
     }
     
-    private var verificationCodeStep: some View {
-        VStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Verification Code")
-                    .font(.headline)
-                
-                Text("Enter the 6-digit code sent to your phone")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                TextField("Enter 6-digit code", text: $resetCode)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .keyboardType(.numberPad)
-                    .onChange(of: resetCode) { newValue in
-                        if newValue.count > 6 {
-                            resetCode = String(newValue.prefix(6))
-                        }
-                    }
+    private var enterCodeView: some View {
+        VStack(spacing: 16) {
+            Text("Enter the 6-digit code sent to \(email)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            HStack(spacing: 12) {
+                ForEach(0..<6, id: \.self) { index in
+                    VerificationCodeDigitField(
+                        text: $resetCode,
+                        index: index
+                    )
+                }
             }
             
-            HStack {
-                Button("Back") {
-                    currentStep = .phoneNumber
+            Button(action: verifyResetCode) {
+                HStack {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    } else {
+                        Text("Verify Code")
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.gray.opacity(0.2))
-                .foregroundColor(.primary)
-                .cornerRadius(10)
-                
-                Button(action: {
-                    if resetCode.count == 6 {
-                        currentStep = .newPassword
-                    }
-                }) {
-                    Text("Continue")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(resetCode.count == 6 ? Color.blue : Color.gray)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .disabled(resetCode.count != 6)
+                .background(resetCode.count == 6 ? Color.blue : Color.gray)
+                .foregroundColor(.white)
+                .cornerRadius(12)
             }
+            .disabled(resetCode.count != 6 || viewModel.isLoading)
+            
+            Button(action: requestResetCode) {
+                Text("Resend Code")
+                    .foregroundColor(.blue)
+            }
+            .disabled(viewModel.isLoading)
         }
     }
     
-    private var newPasswordStep: some View {
-        VStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("New Password")
-                    .font(.headline)
-                
-                SecureField("Enter new password", text: $newPassword)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-            }
+    private var newPasswordView: some View {
+        VStack(spacing: 16) {
+            CustomTextField(
+                text: $newPassword,
+                placeholder: "New Password",
+                icon: "lock",
+                isSecure: true
+            )
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Confirm Password")
-                    .font(.headline)
-                
-                SecureField("Confirm new password", text: $confirmPassword)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-            }
+            CustomTextField(
+                text: $confirmPassword,
+                placeholder: "Confirm New Password",
+                icon: "lock",
+                isSecure: true
+            )
             
-            HStack {
-                Button("Back") {
-                    currentStep = .verificationCode
+            Button(action: resetPassword) {
+                HStack {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    } else {
+                        Text("Reset Password")
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.gray.opacity(0.2))
-                .foregroundColor(.primary)
-                .cornerRadius(10)
-                
-                Button(action: {
-                    Task {
-                        await viewModel.resetPassword(
-                            phoneNumber: phoneNumber,
-                            resetCode: resetCode,
-                            newPassword: newPassword
-                        )
-                    }
-                }) {
-                    HStack {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
-                        } else {
-                            Text("Reset Password")
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(canResetPassword ? Color.blue : Color.gray)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                }
-                .disabled(!canResetPassword || viewModel.isLoading)
+                .background(isPasswordFormValid ? Color.blue : Color.gray)
+                .foregroundColor(.white)
+                .cornerRadius(12)
             }
+            .disabled(!isPasswordFormValid || viewModel.isLoading)
         }
     }
     
-    private var canResetPassword: Bool {
-        !newPassword.isEmpty && 
-        !confirmPassword.isEmpty && 
-        newPassword == confirmPassword && 
-        newPassword.count >= 6
-    }
+    // MARK: - Helper Methods
     
-    private func getStepColor(for index: Int) -> Color {
-        let stepIndex: Int
+    private func getStepDescription() -> String {
         switch currentStep {
-        case .phoneNumber: stepIndex = 0
-        case .verificationCode: stepIndex = 1
-        case .newPassword: stepIndex = 2
+        case .requestCode:
+            return "Enter your email address to receive a password reset code"
+        case .enterCode:
+            return "Enter the 6-digit code sent to your email"
+        case .newPassword:
+            return "Create a new password for your account"
         }
-        
-        return index <= stepIndex ? .blue : .gray.opacity(0.3)
+    }
+    
+    private var isPasswordFormValid: Bool {
+        return !newPassword.isEmpty && !confirmPassword.isEmpty && newPassword == confirmPassword && newPassword.count >= 6
+    }
+    
+    private func requestResetCode() {
+        Task {
+            await viewModel.requestResetCode(email: email)
+            if viewModel.showSuccess {
+                currentStep = .enterCode
+            }
+        }
+    }
+    
+    private func verifyResetCode() {
+        // For demo purposes, accept any 6-digit code
+        currentStep = .newPassword
+    }
+    
+    private func resetPassword() {
+        Task {
+            await viewModel.resetPassword(
+                email: email,
+                resetCode: resetCode,
+                newPassword: newPassword
+            )
+            if viewModel.showSuccess {
+                dismiss()
+            }
+        }
     }
 }
 

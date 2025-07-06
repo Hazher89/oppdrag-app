@@ -29,9 +29,10 @@
     </entity>
     <entity name="UserEntity" representedClassName="UserEntity" syncable="YES" codeGenerationType="class">
         <attribute name="companyId" optional="YES" attributeType="String"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="isEmailVerified" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
-        <attribute name="phoneNumber" optional="YES" attributeType="String"/>
         <attribute name="role" optional="YES" attributeType="String"/>
     </entity>
 </model> 

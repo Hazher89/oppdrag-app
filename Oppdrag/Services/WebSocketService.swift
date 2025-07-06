@@ -20,7 +20,7 @@ class WebSocketService: NSObject, ObservableObject {
     private var heartbeatTimer: Timer?
     
     // Replace with your WebSocket server URL
-    private let wsURL = "wss://your-websocket-server.com/ws"
+    private let wsURL = "wss://oppdrag-app.onrender.com"
     
     private override init() {
         super.init()

@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import CoreData
 
 class AssignmentsManager: ObservableObject {
     @Published var assignments: [Assignment] = []
@@ -71,48 +72,12 @@ class AssignmentsManager: ObservableObject {
             }
         }
     }
-}
-
-// MARK: - Assignment Model
-struct Assignment: Identifiable, Codable {
-    let id: String
-    let title: String
-    let description: String
-    let date: Date
-    var status: AssignmentStatus
-    let pdfUrl: String
-    var arrivalTime: Date?
-}
-
-enum AssignmentStatus: String, CaseIterable, Codable {
-    case pending = "pending"
-    case inProgress = "in_progress"
-    case completed = "completed"
-    case cancelled = "cancelled"
     
-    var displayName: String {
-        switch self {
-        case .pending:
-            return "Pending"
-        case .inProgress:
-            return "In Progress"
-        case .completed:
-            return "Completed"
-        case .cancelled:
-            return "Cancelled"
-        }
-    }
-    
-    var color: Color {
-        switch self {
-        case .pending:
-            return .orange
-        case .inProgress:
-            return .blue
-        case .completed:
-            return .green
-        case .cancelled:
-            return .red
+    func updateAssignmentStatus(assignmentId: String, status: AssignmentStatus) async {
+        await MainActor.run {
+            if let index = assignments.firstIndex(where: { $0.id == assignmentId }) {
+                assignments[index].status = status
+            }
         }
     }
 } 
