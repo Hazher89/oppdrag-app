@@ -1,0 +1,12 @@
+{
+  "name": "oppdrag-app",
+  "version": "1.0.0",
+  "description": "Driver Assignment Management System",
+  "scripts": {
+    "build": "cd backend && npm install",
+    "start": "cd backend && npm start"
+  },
+  "keywords": ["driver", "dispatch", "assignment", "management"],
+  "author": "Your Company",
+  "license": "MIT"
+} 
