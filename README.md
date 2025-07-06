@@ -1,333 +1,301 @@
-# 🚛 DriveDispatch - Complete Driver Assignment Management System
+# DriveDispatch Backend Server
 
-A professional driver assignment management system that replaces Connecteam with a modern, feature-rich solution for managing drivers, assignments, and real-time communication.
+A complete Node.js backend server for the DriveDispatch driver assignment management system.
 
-## ✨ Features
+## 🚀 Features
 
-### 📱 iOS Mobile App (for Drivers)
-- **Phone-based authentication** with secure login
-- **Assignment management** with PDF file support
-- **Real-time chat** with admins and other drivers
-- **Status updates** (pending → in progress → completed)
-- **Location tracking** and arrival time management
-- **Push notifications** for new assignments
-- **Offline support** with local data persistence
+- **User Authentication**: Phone number-based login with JWT tokens
+- **Role-Based Access Control**: Driver, Admin, and Super Admin roles
+- **Assignment Management**: Create, assign, and track driver assignments
+- **PDF File Upload**: Secure PDF file handling for assignments
+- **Real-time Chat**: WebSocket-based chat system
+- **Admin Dashboard**: Comprehensive admin interface with reports
+- **Push Notifications**: Device token management for notifications
+- **File Management**: Secure file upload and storage
+- **API Security**: Rate limiting, validation, and authentication
 
-### 🌐 Admin Web Interface (for Windows PCs)
-- **Modern dashboard** with real-time statistics
-- **Assignment creation** with PDF upload support
-- **Driver management** with role-based permissions
-- **Real-time monitoring** of driver progress
-- **Reports and analytics** with performance metrics
-- **Bulk operations** for efficient management
+## 📋 Prerequisites
 
-### 🔧 Backend API Server
-- **RESTful API** with comprehensive endpoints
-- **WebSocket support** for real-time features
-- **File upload system** for PDF assignments
-- **JWT authentication** with role-based access
-- **MongoDB database** with optimized schemas
-- **Security features** (rate limiting, validation, CORS)
+- Node.js (v16 or higher)
+- MongoDB (v4.4 or higher)
+- npm or yarn
 
-## 🚀 Quick Start
+## 🛠️ Installation
 
-### 1. Backend Setup (5 minutes)
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Run quick start script (macOS/Linux)
-./quick-start.sh
-
-# Or manual setup
-npm install
-cp env.example .env
-node setup.js
-npm start
-```
-
-### 2. iOS App Setup
-
-1. **Open `Oppdrag.xcodeproj`** in Xcode
-2. **Update API URL** in `APIService.swift`:
-   ```swift
-   static let baseURL = "http://localhost:3000/api/v1"
+1. **Clone the repository**
+   ```bash
+   cd backend
    ```
-3. **Build and run** the app (⌘+R)
 
-### 3. Admin Access
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-- **URL:** `http://localhost:3000/admin`
-- **Login:** `+1987654321` / `admin123456`
+3. **Set up environment variables**
+   ```bash
+   cp env.example .env
+   ```
+   
+   Edit `.env` file with your configuration:
+   ```env
+   # Server Configuration
+   PORT=3000
+   NODE_ENV=development
+   
+   # Database
+   MONGODB_URI=mongodb://localhost:27017/drivedispatch
+   
+   # JWT Secret (generate a strong secret)
+   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   
+   # Optional: Super Admin credentials
+   SUPER_ADMIN_PHONE=+1234567890
+   SUPER_ADMIN_NAME=Super Admin
+   SUPER_ADMIN_PASSWORD=admin123456
+   SUPER_ADMIN_EMAIL=admin@drivedispatch.com
+   ```
 
-## 📋 System Architecture
+4. **Set up the database**
+   ```bash
+   node setup.js
+   ```
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   iOS App       │    │  Admin Web      │    │  Backend API    │
-│   (Drivers)     │    │  Interface      │    │  Server         │
-│                 │    │  (Admins)       │    │                 │
-├─────────────────┤    ├─────────────────┤    ├─────────────────┤
-│ • Authentication│    │ • Dashboard     │    │ • REST API      │
-│ • Assignments   │    │ • User Mgmt     │    │ • WebSockets    │
-│ • Chat System   │    │ • Reports       │    │ • File Upload   │
-│ • PDF Viewer    │    │ • Analytics     │    │ • Auth System   │
-│ • Notifications │    │ • Bulk Ops      │    │ • Database      │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                │                       │
-                                └───────────────────────┘
-                                        MongoDB
-```
+5. **Start the server**
+   ```bash
+   npm start
+   ```
+
+## 📱 API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - User login
+- `GET /api/v1/auth/me` - Get current user
+- `PUT /api/v1/auth/profile` - Update profile
+- `POST /api/v1/auth/logout` - Logout
+
+### Assignments
+- `POST /api/v1/assignments` - Create assignment (Admin)
+- `GET /api/v1/assignments` - Get assignments
+- `GET /api/v1/assignments/:id` - Get assignment details
+- `PUT /api/v1/assignments/:id/status` - Update assignment status
+- `PUT /api/v1/assignments/:id` - Update assignment (Admin)
+- `DELETE /api/v1/assignments/:id` - Delete assignment (Admin)
+- `POST /api/v1/assignments/:id/location` - Update location (Driver)
+
+### Chat
+- `GET /api/v1/chat/conversations` - Get conversations
+- `POST /api/v1/chat/conversations` - Create conversation
+- `GET /api/v1/chat/conversations/:id/messages` - Get messages
+- `POST /api/v1/chat/conversations/:id/messages` - Send message
+- `PUT /api/v1/chat/conversations/:id/read` - Mark as read
+- `GET /api/v1/chat/users` - Get available users
+
+### Admin
+- `GET /api/v1/admin/users` - Get all users
+- `POST /api/v1/admin/users` - Create user
+- `PUT /api/v1/admin/users/:id` - Update user
+- `DELETE /api/v1/admin/users/:id` - Delete user
+- `GET /api/v1/admin/dashboard` - Get dashboard stats
+- `GET /api/v1/admin/reports` - Get reports
+- `POST /api/v1/admin/bulk-assign` - Bulk assign assignments
+
+### Users
+- `GET /api/v1/users/drivers` - Get drivers
+- `GET /api/v1/users/:id` - Get user details
+- `PUT /api/v1/users/:id/device-token` - Update device token
+- `PUT /api/v1/users/:id/password` - Change password
+- `GET /api/v1/users/search` - Search users
 
 ## 🔐 User Roles & Permissions
 
 ### Super Admin
 - Full system access
-- Manage all companies and users
-- System-wide analytics
+- Can manage all companies and users
+- All permissions enabled
 
-### Company Admin
-- Manage company drivers
-- Create and assign tasks
-- View company reports
-- PDF file management
+### Admin
+- Company-specific access
+- Can manage users within their company
+- Can create/edit/delete assignments
+- Can view reports and analytics
 
 ### Driver
-- View assigned tasks
-- Update task status
-- Real-time chat
-- Location sharing
+- View and update their own assignments
+- Update assignment status and location
+- Participate in chat conversations
+- Update their profile
 
-## 📁 Project Structure
+## 📁 File Structure
 
 ```
-DriveDispatch/
-├── Oppdrag/                    # iOS App
-│   ├── ContentView.swift       # Main app interface
-│   ├── AuthenticationManager.swift
-│   ├── AssignmentsManager.swift
-│   ├── ChatManager.swift
-│   └── APIService.swift
-├── backend/                    # Node.js Server
-│   ├── server.js              # Main server file
-│   ├── models/                # Database models
-│   ├── routes/                # API endpoints
-│   ├── middleware/            # Auth & validation
-│   ├── public/admin/          # Admin web interface
-│   └── uploads/               # File storage
-├── SETUP_GUIDE.md             # Detailed setup instructions
-└── README.md                  # This file
+backend/
+├── models/           # Database models
+│   ├── User.js
+│   ├── Assignment.js
+│   └── Chat.js
+├── routes/           # API routes
+│   ├── auth.js
+│   ├── assignments.js
+│   ├── chat.js
+│   ├── admin.js
+│   └── users.js
+├── middleware/       # Middleware functions
+│   └── auth.js
+├── uploads/          # File uploads
+│   ├── pdfs/         # Assignment PDFs
+│   └── chat/         # Chat files
+├── server.js         # Main server file
+├── setup.js          # Database setup script
+├── package.json
+└── README.md
 ```
 
-## 🛠️ Technology Stack
+## 🗄️ Database Schema
 
-### Frontend
-- **iOS:** SwiftUI, PDFKit, Core Data
-- **Web Admin:** HTML5, CSS3, JavaScript, Bootstrap 5
+### User Model
+- Phone number (unique identifier)
+- Name, email, password
+- Role (driver/admin/super_admin)
+- Company ID
+- Permissions array
+- Device token for notifications
+- Driver-specific fields (license, vehicle)
 
-### Backend
-- **Runtime:** Node.js with Express.js
-- **Database:** MongoDB with Mongoose
-- **Real-time:** Socket.io for WebSockets
-- **File Upload:** Multer with local/S3 storage
-- **Authentication:** JWT with bcrypt
+### Assignment Model
+- Title, description
+- Driver and assigner references
+- Status tracking
+- Location data (pickup/delivery)
+- Time scheduling
+- PDF file information
+- Notes and completion data
 
-### DevOps
-- **Process Manager:** PM2 (production)
-- **Security:** Helmet, CORS, Rate limiting
-- **Validation:** Express-validator
-
-## 📊 Key Features Explained
-
-### PDF Assignment System
-- **Upload PDFs** via admin interface
-- **Secure storage** with access control
-- **Mobile viewing** with PDFKit
-- **Version control** for updates
-
-### Real-time Chat
-- **WebSocket connection** for instant messaging
-- **File sharing** in conversations
-- **Read receipts** and typing indicators
-- **Conversation management**
-
-### Location Tracking
-- **GPS integration** for driver location
-- **Real-time updates** to admins
-- **Arrival time estimation**
-- **Route optimization** (future)
-
-### Admin Dashboard
-- **Real-time statistics** and metrics
-- **Driver performance** analytics
-- **Assignment status** monitoring
-- **Custom reports** generation
+### Chat Model
+- Participants array
+- Message history
+- File attachments
+- Read status tracking
+- Conversation metadata
 
 ## 🔧 Configuration
 
 ### Environment Variables
-```env
-# Server
-PORT=3000
-NODE_ENV=development
 
-# Database
-MONGODB_URI=mongodb://localhost:27017/drivedispatch
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Server port | 3000 |
+| `NODE_ENV` | Environment | development |
+| `MONGODB_URI` | MongoDB connection | localhost:27017/drivedispatch |
+| `JWT_SECRET` | JWT signing secret | Required |
+| `STORAGE_TYPE` | File storage type | local |
+| `AWS_*` | AWS S3 configuration | Optional |
 
-# Security
-JWT_SECRET=your-secure-jwt-secret
+### File Upload Configuration
 
-# File Storage
-STORAGE_TYPE=local  # or 's3' for AWS
-```
+The server supports both local file storage and AWS S3:
 
-### iOS App Configuration
-```swift
-// APIService.swift
-static let baseURL = "http://localhost:3000/api/v1"
-static let useDemoData = false  // Set to true for testing
-```
+**Local Storage (Default)**
+- Files stored in `uploads/` directory
+- Accessible via HTTP URLs
+- Suitable for development and small deployments
 
-## 🚀 Deployment Options
+**AWS S3 Storage**
+- Set `STORAGE_TYPE=s3` in environment
+- Configure AWS credentials
+- Better for production deployments
+
+## 🚀 Deployment
 
 ### Development
 ```bash
-# Backend
-cd backend && npm start
-
-# iOS
-Open in Xcode and run on simulator/device
+npm run dev
 ```
 
 ### Production
 ```bash
-# Backend (with PM2)
-npm install -g pm2
-pm2 start server.js --name drivedispatch
-pm2 startup && pm2 save
-
-# iOS
-Archive and distribute via App Store or TestFlight
+npm start
 ```
 
-## 📈 Performance & Scalability
+### Docker (Optional)
+```bash
+docker build -t drivedispatch-backend .
+docker run -p 3000:3000 drivedispatch-backend
+```
 
-### Optimizations
-- **Database indexing** on frequently queried fields
-- **File compression** for PDF uploads
-- **Connection pooling** for database
-- **Caching strategies** for static data
+## 📊 Monitoring & Logging
 
-### Monitoring
-- **Health check endpoint** (`/health`)
-- **Error logging** and tracking
-- **Performance metrics** collection
-- **Real-time monitoring** dashboard
+The server includes:
+- Request logging
+- Error tracking
+- Performance monitoring
+- Health check endpoint (`/health`)
 
 ## 🔒 Security Features
 
-### Authentication & Authorization
-- **JWT tokens** with expiration
-- **Role-based access control**
-- **Password hashing** with bcrypt
-- **Session management**
+- JWT-based authentication
+- Password hashing with bcrypt
+- Rate limiting
+- Input validation
+- CORS protection
+- Helmet security headers
+- File upload restrictions
 
-### API Security
-- **Rate limiting** to prevent abuse
-- **Input validation** and sanitization
-- **CORS configuration** for web access
-- **File upload restrictions**
+## 📱 iOS App Integration
 
-### Data Protection
-- **Encrypted storage** for sensitive data
-- **Secure file access** with authentication
-- **Audit logging** for user actions
-- **Backup and recovery** procedures
+To connect your iOS app:
 
-## 📱 Mobile App Features
+1. Update the API base URL in your iOS app
+2. Ensure the server is accessible from mobile devices
+3. Configure push notifications (optional)
+4. Test authentication flow
 
-### Core Functionality
-- **Offline-first design** with local storage
-- **Push notifications** for assignments
-- **Background location** updates
-- **PDF document** viewing and management
-
-### User Experience
-- **Intuitive interface** with SwiftUI
-- **Dark mode support** for drivers
-- **Accessibility features** for all users
-- **Multi-language support** (future)
-
-## 🌐 Web Admin Features
-
-### Management Tools
-- **Drag-and-drop** assignment creation
-- **Bulk operations** for efficiency
-- **Advanced filtering** and search
-- **Export capabilities** for reports
-
-### Analytics Dashboard
-- **Real-time metrics** and KPIs
-- **Performance tracking** by driver
-- **Assignment completion** rates
-- **Custom report** generation
-
-## 🆘 Support & Troubleshooting
+## 🆘 Troubleshooting
 
 ### Common Issues
-1. **MongoDB connection** - Check if service is running
-2. **Port conflicts** - Verify port 3000 is available
-3. **File uploads** - Check directory permissions
-4. **iOS connectivity** - Verify API URL and network
 
-### Getting Help
-- **Check logs** for detailed error messages
-- **Test API endpoints** with Postman
-- **Verify database** connectivity
-- **Review setup guide** for configuration
+1. **MongoDB Connection Error**
+   - Ensure MongoDB is running
+   - Check connection string in `.env`
 
-## 🎯 Use Cases
+2. **JWT Secret Error**
+   - Set a strong JWT_SECRET in `.env`
+   - Restart server after changes
 
-### Perfect For:
-- **Delivery companies** managing drivers
-- **Logistics firms** with route optimization
-- **Service businesses** with field workers
-- **Transportation companies** with fleet management
+3. **File Upload Issues**
+   - Check upload directory permissions
+   - Verify file size limits
+   - Ensure proper file types
 
-### Key Benefits:
-- **Real-time communication** between office and field
-- **Efficient assignment** management
-- **Document sharing** with PDF support
-- **Performance tracking** and analytics
-- **Cost reduction** through automation
+4. **CORS Errors**
+   - Configure CORS settings for your domain
+   - Check client-side API calls
 
-## 🔄 Future Enhancements
+### Support
 
-### Planned Features
-- **Route optimization** with AI
-- **Advanced analytics** with machine learning
-- **Multi-language support** for global teams
-- **Integration APIs** for third-party systems
-- **Mobile app** for Android devices
+For issues and questions:
+1. Check the logs for error details
+2. Verify environment configuration
+3. Test API endpoints with Postman
+4. Review database connectivity
 
-### Scalability Improvements
-- **Microservices architecture** for large deployments
-- **Cloud-native** deployment options
-- **Advanced caching** with Redis
-- **Load balancing** for high traffic
+## 📈 Performance Optimization
 
----
+- Database indexing on frequently queried fields
+- File upload size limits
+- Rate limiting to prevent abuse
+- Efficient query patterns
+- Connection pooling
 
-## 🎉 Ready to Get Started?
+## 🔄 Updates & Maintenance
 
-1. **Follow the setup guide** in `SETUP_GUIDE.md`
-2. **Run the quick start script** for automated setup
-3. **Test with sample accounts** provided
-4. **Customize for your business** needs
-
-**Transform your driver management today! 🚛✨**
+- Regular security updates
+- Database backups
+- Log rotation
+- Performance monitoring
+- Dependency updates
 
 ---
 
-*DriveDispatch - Professional driver assignment management system* 
+**DriveDispatch Backend** - Professional driver assignment management system 
